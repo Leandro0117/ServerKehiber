@@ -65,6 +65,7 @@ export class OperationExportService {
 					timeStrat: true,
 					timeEnd: true,
 					motorShip: true,
+					zone:true,
 					subSite: { select: { id: true, name: true } },
 					jobArea: { select: { id: true, name: true } },
 					client: { select: { id: true, name: true } },
@@ -273,8 +274,10 @@ export class OperationExportService {
 			) as StatusOperation[];
 
 			if (validStatuses.length) where.status = { in: validStatuses };
-		} else {
-    where.status = StatusOperation.COMPLETED;  //descargar SOLO OpFinalizadas
+		} 
+		
+		else {
+              where.status = { not: StatusOperation.CANCELED };  //No descargar las operaciones CANCELED
       }  
 
 		if (filters.jobAreaIds?.length) where.id_area = { in: filters.jobAreaIds };
@@ -352,6 +355,7 @@ export class OperationExportService {
 					"Total Trabajadores": 0,
 					"Total Nomina": this.round2(opBills.reduce((acc, b) => acc + Number(b.total_paysheet || 0), 0)),
 					Buque: op.motorShip || '',
+					Zona: op.zone || '',
 					"Total Alimentacion": feedingsByOperation.get(op.id) || 0,
 					"Supervisores": this.formatSupervisors(op.inChargeOperation),
 					Observaciones: this.joinObservations(opBills),
@@ -395,6 +399,7 @@ export class OperationExportService {
 					"Total Trabajadores": group.workers.length,
 					"Total Nomina": this.round2(groupBills.reduce((acc: number, b: any) => acc + Number(b.total_paysheet || 0), 0)),
 					Buque: op.motorShip || '',
+					Zona: op.zone || '',
 				    "Total Alimentacion": feedingsByOperation.get(op.id) || 0,
 					Supervisores: this.formatSupervisors(op.inChargeOperation),
 					Observaciones: this.joinObservations(groupBills),
@@ -461,6 +466,7 @@ export class OperationExportService {
 					FHED: 0,
 					FHEN: 0,
 					Buque: op.motorShip || '',
+					Zona: op.zone || '',
 					"Total Alimentacion": 0,
 					Area: op.jobArea?.name || 'Sin area',
 					Cliente: op.client?.name || 'Sin cliente',
@@ -549,6 +555,7 @@ export class OperationExportService {
 					FHED: distribution.FHED,
 					FHEN: distribution.FHEN,
 					Buque: op.motorShip || '',
+					Zona: op.zone || '',
 					"Total Alimentacion": feedingsByWorker.get(feedKey) || 0,
 					Area: op.jobArea?.name || 'Sin area',
 					Cliente: op.client?.name || 'Sin cliente',
@@ -625,7 +632,7 @@ export class OperationExportService {
 				'Horas Trabajadas Op',
 				'Horas Trabajadas',
 			]),
-			integerHeaders: new Set(['Operacion','Semana','Codigo Subservicio','Total Trabajadores','Total Alimentacion','DNI Trabajador','DNITrabajador','Codigo Nomina']),
+			integerHeaders: new Set(['Operacion','Semana','Codigo Subservicio','Total Trabajadores','Total Alimentacion','DNI Trabajador','DNITrabajador','Codigo Nomina','Zona']),
 			preferredWidths: { Subservicio: 42, Observaciones: 42, Supervisores: 30, 'Nombre Trabajador': 28, Buque: 22 },
 		});
 	}
@@ -851,6 +858,7 @@ export class OperationExportService {
 				'Fecha Fin': this.combineDateTime(op.dateEnd, op.timeEnd),
 				'Horas Trabajadas': this.hoursToDecimal(this.getHoursWorked(op.dateStart, op.timeStrat, op.dateEnd, op.timeEnd)),
 				Buque: op.motorShip || '',
+				Zona: op.zone || '',
 				Tarea: tasks || 'Sin tarea',
 				'Total Trabajadores': workersCount,
 				Turnos: groups.length,
@@ -875,6 +883,7 @@ export class OperationExportService {
 					'Fecha Fin': this.combineDateTime(op.dateEnd, op.timeEnd),
 					'Horas Trabajadas': this.getHoursWorked(op.dateStart, op.timeStrat, op.dateEnd, op.timeEnd),
 					Buque: op.motorShip || '',
+					Zona: op.zone || '',
 					Tarea: 'Sin tarea',
 					Turno: '',
 					'DNI Trabajador': 0,
@@ -913,6 +922,7 @@ export class OperationExportService {
 							group.schedule?.timeEnd ,
 						),
 						Buque: op.motorShip || '',
+						Zona: op.zone || '',
 						Tarea: group.subTask?.name || 'Sin tarea',
 						Turno: turno,
 						'DNI Trabajador': Number(worker.dni || 0),
