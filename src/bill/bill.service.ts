@@ -926,12 +926,12 @@ if (!hasSundayReal) {
   try {
     // ✅ USAR group_hours EN LUGAR DE op_duration PARA EL COMPENSATORIO
     const groupDuration = Number(billDB.group_hours) || 0;
-    console.log('🔍 [calculateCompensatoryForBill] Usando group_hours:', {
-      billId: billDB.id,
-      groupHours: groupDuration,
-      opDurationTotal: billDB.group_hours,
-      diferencia: `El compensatorio usa ${groupDuration}h del grupo`
-    });
+    // console.log('🔍 [calculateCompensatoryForBill] Usando group_hours:', {
+    //   billId: billDB.id,
+    //   groupHours: groupDuration,
+    //   opDurationTotal: billDB.group_hours,
+    //   diferencia: `El compensatorio usa ${groupDuration}h del grupo`
+    // });
     
     if (groupDuration === 0) {
       return {
@@ -946,25 +946,43 @@ if (!hasSundayReal) {
     // Normalizar fechas usando operationWorker real
 const operationWorker = billDB.billDetails?.[0]?.operationWorker;
 
+if (!operationWorker) {
+  return {
+    hours: 0,
+    amount: 0,
+    percentage: 0,
+    includeInTotal: false,
+    error:
+      'No se encontró operationWorker para calcular compensatorio',
+  };
+}
 
-    // Normalizar fechas usando la función de utilidades
-    // const startDate = billDB.operation_worker?.dateStart
-    const startDate = operationWorker.dateStart
-      ? toLocalDate(operationWorker.dateStart)
-      : undefined;
-    const endDate = operationWorker.dateEnd
-      ? toLocalDate(operationWorker.dateEnd)
-      : undefined;
+// ✅ Normalizar fechas
+const startDate = operationWorker?.dateStart
+  ? toLocalDate(operationWorker.dateStart)
+  : undefined;
 
-    console.log('🔍 [calculateCompensatoryForBill] Verificación de fechas:', {
-      billId: billDB.id,
-      dateStartRaw: billDB.operation_worker?.dateStart,
-      dateEndRaw: billDB.operation_worker?.dateEnd,
-      startDate: startDate?.toISOString().split('T')[0],
-      endDate: endDate?.toISOString().split('T')[0],
-      startDayOfWeek: startDate?.getDay(), // 0=domingo, 1=lunes, ...
-      endDayOfWeek: endDate?.getDay(),
-    });
+const endDate = operationWorker?.dateEnd
+  ? toLocalDate(operationWorker.dateEnd)
+  : undefined;
+
+    // // Normalizar fechas usando la función de utilidades
+    // const startDate = operationWorker.dateStart
+    //   ? toLocalDate(operationWorker.dateStart)
+    //   : undefined;
+    // const endDate = operationWorker.dateEnd
+    //   ? toLocalDate(operationWorker.dateEnd)
+    //   : undefined;
+
+    // console.log('🔍 [calculateCompensatoryForBill] Verificación de fechas:', {
+    //   billId: billDB.id,
+    //   dateStartRaw: billDB.operation_worker?.dateStart,
+    //   dateEndRaw: billDB.operation_worker?.dateEnd,
+    //   startDate: startDate?.toISOString().split('T')[0],
+    //   endDate: endDate?.toISOString().split('T')[0],
+    //   startDayOfWeek: startDate?.getDay(), // 0=domingo, 1=lunes, ...
+    //   endDayOfWeek: endDate?.getDay(),
+    // });
 
     // VERIFICAR SI HAY DOMINGO REAL
     // let hasSundayReal = false;
@@ -1020,16 +1038,16 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
     const effectiveHours = Math.min(groupDuration, dayHours);
     const compensatoryHours = effectiveHours * compensatoryPerHour;
 
-    console.log('📊 [Cálculo Compensatorio Detallado]:', {
-      weekHours,
-      dayHours,
-      compensatoryDay,
-      compensatoryPerHour,
-      groupDuration: `${groupDuration}h (duración del GRUPO)`,
-      effectiveHours,
-      compensatoryHours: `${compensatoryHours}h (resultado final)`,
-      nota: 'Ahora usa group_hours en lugar de op_duration'
-    });
+    // console.log('📊 [Cálculo Compensatorio Detallado]:', {
+    //   weekHours,
+    //   dayHours,
+    //   compensatoryDay,
+    //   compensatoryPerHour,
+    //   groupDuration: `${groupDuration}h (duración del GRUPO)`,
+    //   effectiveHours,
+    //   compensatoryHours: `${compensatoryHours}h (resultado final)`,
+    //   nota: 'Ahora usa group_hours en lugar de op_duration'
+    // });
 
     const workerCount = billDB.number_of_workers ?? 0;
     const tariff = billDB.billDetails?.[0]?.operationWorker?.tariff?.paysheet_tariff ?? 0;
@@ -1623,21 +1641,41 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
           weekHoursConfig
         );
         
-        // ✅ OBTENER FECHAS DEL GRUPO
-        const groupDates = await this.getGroupDatesFromOperationWorkers(
-          bill.id_operation,
-          bill.id_group,
-        );
+        // // ✅ OBTENER FECHAS DEL GRUPO
+        // const groupDates = await this.getGroupDatesFromOperationWorkers(
+        //   bill.id_operation,
+        //   bill.id_group,
+        // );
 
-        return {
-          ...bill,
-          op_duration: bill.operation?.op_duration,
-          compensatory,
-          dateStart_group: groupDates.dateStart,
-          timeStart_group: groupDates.timeStart,
-          dateEnd_group: groupDates.dateEnd,
-          timeEnd_group: groupDates.timeEnd,
-        };
+        // return {
+        //   ...bill,
+        //   op_duration: bill.operation?.op_duration,
+        //   compensatory,
+        //   dateStart_group: groupDates.dateStart,
+        //   timeStart_group: groupDates.timeStart,
+        //   dateEnd_group: groupDates.dateEnd,
+        //   timeEnd_group: groupDates.timeEnd,                
+        // };
+         const operationWorker =
+        bill.billDetails?.[0]?.operationWorker;
+
+          return {
+            ...bill,
+            op_duration: bill.operation?.op_duration,
+            compensatory,
+
+            dateStart_group:
+              operationWorker?.dateStart,
+
+            timeStart_group:
+              operationWorker?.timeStart,
+
+            dateEnd_group:
+              operationWorker?.dateEnd,
+
+            timeEnd_group:
+              operationWorker?.timeEnd,
+          };
       }),
     );
 
@@ -1757,20 +1795,40 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
         const compensatory = await this.calculateCompensatoryForBill(bill);
         
         // ✅ OBTENER FECHAS DEL GRUPO
-        const groupDates = await this.getGroupDatesFromOperationWorkers(
-          bill.id_operation,
-          bill.id_group,
-        );
+        // const groupDates = await this.getGroupDatesFromOperationWorkers(
+        //   bill.id_operation,
+        //   bill.id_group,
+        // );
 
-        return {
-          ...bill,
-          op_duration: bill.operation?.op_duration,
-          compensatory,
-          dateStart_group: groupDates.dateStart,
-          timeStart_group: groupDates.timeStart,
-          dateEnd_group: groupDates.dateEnd,
-          timeEnd_group: groupDates.timeEnd,
-        };
+        // return {
+        //   ...bill,
+        //   op_duration: bill.operation?.op_duration,
+        //   compensatory,
+        //   dateStart_group: groupDates.dateStart,
+        //   timeStart_group: groupDates.timeStart,
+        //   dateEnd_group: groupDates.dateEnd,
+        //   timeEnd_group: groupDates.timeEnd,
+        // };
+         const operationWorker =
+        bill.billDetails?.[0]?.operationWorker;
+
+          return {
+            ...bill,
+            op_duration: bill.operation?.op_duration,
+            compensatory,
+
+            dateStart_group:
+              operationWorker?.dateStart,
+
+            timeStart_group:
+              operationWorker?.timeStart,
+
+            dateEnd_group:
+              operationWorker?.dateEnd,
+
+            timeEnd_group:
+              operationWorker?.timeEnd,
+          };
       }),
     );
 
@@ -1879,10 +1937,10 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
     const compensatory = await this.calculateCompensatoryForBill(billDB);
 
     // ✅ OBTENER FECHAS DEL GRUPO desde operation_worker
-    const groupDates = await this.getGroupDatesFromOperationWorkers(
-      billDB.id_operation,
-      billDB.id_group,
-    );
+    // const groupDates = await this.getGroupDatesFromOperationWorkers(
+    //   billDB.id_operation, 
+    //   billDB.id_group,
+    // );
 
 
     const operationWorker = billDB.billDetails?.[0]?.operationWorker;
@@ -2005,7 +2063,7 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
         validateOperationID,
         userId,
         billDb.id_operation,
-        billDb.amount,
+        Number(billDb.amount),
         billDb,
       );
     } else {
@@ -2175,7 +2233,7 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
       // NO debemos recalcularlas, solo recalcular los totales con el nuevo número de trabajadores
       const updateBillDto: UpdateBillDto = {
         id: String(bill.id_group || ''),
-        amount: bill.amount,
+        amount: Number(bill.amount),
         group_hours: bill.group_hours ? new Decimal(bill.group_hours.toString()) : new Decimal(0),
         billHoursDistribution: {
           HOD: Number(bill.FAC_HOD) || 0,
@@ -2215,7 +2273,7 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
         validateOperationID,
         bill.id_user,
         operationId,
-        bill.amount,
+        Number(bill.amount),
         bill,
       );
 
@@ -3132,7 +3190,7 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
             // Preparar UpdateBillDto para forzar recálculo
             const updateBillDto: UpdateBillDto = {
               id: String(id_group),
-              amount: bill.amount || 0, // ✅ USAR AMOUNT DE LA BD
+              amount: Number(bill.amount) || 0, // ✅ USAR AMOUNT DE LA BD
               group_hours: new Decimal(groupHours.toString()),
               billHoursDistribution: {
                 HOD: Number(bill.HOD) || 0,
@@ -3167,7 +3225,7 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
               validateOperationID,
               bill.id_user,
               id_operation,
-              bill.amount,
+              Number(bill.amount),
               bill,
             );
 
@@ -3621,20 +3679,42 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
           weekHoursConfig
         );
         
-        const groupDates = await this.getGroupDatesFromOperationWorkers(
-          bill.id_operation,
-          bill.id_group,
-        );
+        // const groupDates = await this.getGroupDatesFromOperationWorkers(
+        //   bill.id_operation,
+        //   bill.id_group,
+        // );
+              const operationWorker =
+        bill.billDetails?.[0]?.operationWorker;
 
-        return {
-          ...bill,
-          op_duration: bill.operation?.op_duration,
-          compensatory,
-          dateStart_group: groupDates.dateStart,
-          timeStart_group: groupDates.timeStart,
-          dateEnd_group: groupDates.dateEnd,
-          timeEnd_group: groupDates.timeEnd,
-        };
+          return {
+            ...bill,
+            op_duration: bill.operation?.op_duration,
+            compensatory,
+
+            dateStart_group:
+              operationWorker?.dateStart,
+
+            timeStart_group:
+              operationWorker?.timeStart,
+
+            dateEnd_group:
+              operationWorker?.dateEnd,
+
+            timeEnd_group:
+              operationWorker?.timeEnd,
+          };
+
+  
+
+        // return {
+        //   ...bill,
+        //   op_duration: bill.operation?.op_duration,
+        //   compensatory,
+        //   dateStart_group: groupDates.dateStart,
+        //   timeStart_group: groupDates.timeStart,
+        //   dateEnd_group: groupDates.dateEnd,
+        //   timeEnd_group: groupDates.timeEnd,
+        // };
       }),
     );
 
@@ -3775,21 +3855,42 @@ const operationWorker = billDB.billDetails?.[0]?.operationWorker;
           sundayHoursConfig,
           weekHoursConfig
         );
-        
-        const groupDates = await this.getGroupDatesFromOperationWorkers(
-          bill.id_operation,
-          bill.id_group,
-        );
 
-        return {
-          ...bill,
-          op_duration: bill.operation?.op_duration,
-          compensatory,
-          dateStart_group: groupDates.dateStart,
-          timeStart_group: groupDates.timeStart,
-          dateEnd_group: groupDates.dateEnd,
-          timeEnd_group: groupDates.timeEnd,
-        };
+         const operationWorker =
+        bill.billDetails?.[0]?.operationWorker;
+
+          return {
+            ...bill,
+            op_duration: bill.operation?.op_duration,
+            compensatory,
+
+            dateStart_group:
+              operationWorker?.dateStart,
+
+            timeStart_group:
+              operationWorker?.timeStart,
+
+            dateEnd_group:
+              operationWorker?.dateEnd,
+
+            timeEnd_group:
+              operationWorker?.timeEnd,
+          };
+        
+        // const groupDates = await this.getGroupDatesFromOperationWorkers(
+        //   bill.id_operation,
+        //   bill.id_group,
+        // );
+
+        // return {
+        //   ...bill,
+        //   op_duration: bill.operation?.op_duration,
+        //   compensatory,
+        //   dateStart_group: groupDates.dateStart,
+        //   timeStart_group: groupDates.timeStart,
+        //   dateEnd_group: groupDates.dateEnd,
+        //   timeEnd_group: groupDates.timeEnd,
+        // };
       }),
     );
 
